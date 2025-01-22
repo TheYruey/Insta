@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../controls/auth/auth_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -9,68 +9,132 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  final _emailController = TextEditingController();
-  final _authController = AuthController();
+  final TextEditingController _emailController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Future<void> _resetPassword() async {
+  bool _isLoading = false;
+
+  Future<void> _sendPasswordReset() async {
     final email = _emailController.text.trim();
-    final result = await _authController.resetPassword(email);
 
-    if (result == null) {
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Correo de recuperación enviado.')),
+        const SnackBar(content: Text('Por favor, ingresa tu correo electrónico.')),
       );
-      Navigator.pop(context); // Regresa a la pantalla de login
-    } else {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result)),
+        const SnackBar(content: Text('Se envió un enlace de recuperación a tu correo.')),
       );
+      Navigator.pop(context); // Regresar a la pantalla de inicio de sesión
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'El correo electrónico no es válido.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No se encontró un usuario con ese correo.';
+          break;
+        default:
+          errorMessage = 'Ocurrió un error. Inténtalo nuevamente.';
+          break;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Recuperar Contraseña')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Correo electrónico',
-                filled: true,
-                fillColor: Colors.grey,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(8)),
-                  borderSide: BorderSide.none,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 100),
+              // Logo
+              const Text(
+                'Instagram',
+                style: TextStyle(
+                  fontFamily: 'Billabong',
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.redAccent,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 50),
+              // Email TextField
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: 'Correo electrónico',
+                  labelStyle: const TextStyle(color: Colors.redAccent),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.redAccent),
+                  ),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 20),
+              // Send Password Reset Button
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+                  : ElevatedButton(
+                onPressed: _sendPasswordReset,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Colors.redAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Enviar enlace de recuperación',
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _resetPassword,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3897F0), // Azul estilo Instagram
-                minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              const SizedBox(height: 20),
+              // Back to Login Link
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('¿Recordaste tu contraseña?'),
+                  const SizedBox(width: 5),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Inicia sesión.',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ),
-              child: const Text(
-                'Enviar Enlace',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
