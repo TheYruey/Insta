@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:semana10/views/screens/main/edit_profile_screen.dart';
 import 'firebase_options.dart';
 import 'views/screens/auth/login_screen.dart';
 import 'views/screens/auth/register_screen.dart';
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
+        '/edit_profile': (context) => const EditProfileScreen(),
         '/home': (context) => const MainScreen(), // Asegúrate de redirigir a MainScreen
       },
     );
