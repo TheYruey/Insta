@@ -51,36 +51,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-      final docSnapshot = await docRef.get();
-
-      if (!docSnapshot.exists) {
-        await docRef.set({
-          'firstName': _firstNameController.text.trim(),
-          'lastName': _lastNameController.text.trim(),
-          'bio': _bioController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          if (_image != null) 'imageUrl': await _uploadImageToStorage(_image!),
-        });
-      } else {
-        await docRef.update({
-          'firstName': _firstNameController.text.trim(),
-          'lastName': _lastNameController.text.trim(),
-          'bio': _bioController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          if (_image != null) 'imageUrl': await _uploadImageToStorage(_image!),
-        });
-      }
+      await docRef.update({
+        'firstName': _firstNameController.text.trim(),
+        'lastName': _lastNameController.text.trim(),
+        'bio': _bioController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        if (_image != null) 'imageUrl': await _uploadImageToStorage(_image!),
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Perfil actualizado exitosamente')),
       );
 
-      // Devuelve un valor para indicar que se realizaron cambios
       Navigator.pop(context, true);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al actualizar el perfil: $e')),
-      );
     } finally {
       setState(() {
         _isLoading = false;
@@ -112,66 +95,128 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editar Perfil'),
+        title: const Text(
+          'Editar Perfil',
+          style: TextStyle(
+            fontFamily: 'Billabong',
+            fontSize: 32,
+          ),
+        ),
         backgroundColor: Colors.redAccent,
+        centerTitle: true,
+        elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 20.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GestureDetector(
               onTap: _pickImage,
-              child: CircleAvatar(
-                radius: 50,
-                backgroundImage:
-                _image != null ? FileImage(_image!) : null,
-                child: _image == null
-                    ? const Icon(Icons.camera_alt, size: 50)
-                    : null,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage: _image != null
+                        ? FileImage(_image!)
+                        : const AssetImage('assets/default_avatar.png'),
+                    child: _image == null
+                        ? const Icon(Icons.camera_alt, size: 40, color: Colors.white)
+                        : null,
+                  ),
+                  if (_image == null)
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _firstNameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Nombre',
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.redAccent),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _lastNameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Apellido',
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.redAccent),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _bioController,
-              decoration: const InputDecoration(
+              maxLines: 3,
+              decoration: InputDecoration(
                 labelText: 'Biografía',
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.redAccent),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
               ),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: _phoneController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Teléfono',
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.redAccent),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Colors.redAccent),
+                ),
               ),
+              keyboardType: TextInputType.phone,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _updateProfile,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: const Text('Guardar Cambios'),
+              child: const Text(
+                'Guardar Cambios',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
             ),
           ],
         ),
